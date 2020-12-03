@@ -2,19 +2,25 @@ import User from '../models/User';
 import db from '../database/index';
 import bcrypt from 'bcrypt';
 
+import { createSession } from './SessionsRepository';
+
 export const createUser =  async (
 	email: string, 
 	username: string, 
 	password: string,
 ) : Promise<User | null> => {
 
-	const encryptedPassword = bcrypt.hashSync(password, 10);
 	try {
 		const user = new User(email, username, password);
 		await db.query(`
 			INSERT INTO users (username, email, password)
 			VALUES ($1, $2, $3)`,
-		[username, email, encryptedPassword]
+		[user.username, user.email, user.password]
+		);
+		await db.query(`
+			INSERT INTO wallets (date, description, value)
+			VALUES ($1, $2, $3)`,
+		[[], [], []]
 		);
 		delete user.password;
 		return user;
@@ -32,11 +38,23 @@ export const login = async (
 	const loginData = await checkEmailPasswordMatch(emailInserted, passwordInserted);
 
 	if(loginData){
-		const {username, email} = loginData;
-		return ({
-			email: email,
-			username: username,
-		});
+		try{
+			const {username, email} = loginData;
+			const id = await getUserId(email);
+			if(id){
+				const session = await createSession(id);
+				if(session){
+					return ({
+						email: email,
+						username: username,
+						token: session.token,
+					});
+				} else return false;
+			} else return false;
+		} catch(error){
+			console.log(error);
+			return false;
+		}
 	} else{
 		return false;
 	}
@@ -45,7 +63,7 @@ export const login = async (
 export const checkEmailPasswordMatch = async (
 	email: string, 
 	password: string,
-) : Promise<User | null | undefined> => {
+) : Promise<User | null> => {
 
 	try {
 		const UserEmailMatch = await db.query(`
@@ -58,6 +76,7 @@ export const checkEmailPasswordMatch = async (
 		if(passwordMatch){
 			return UserEmailMatch.rows[0];
 		}
+		return null;
 	} catch (error) {
 		console.log(error.message);
 		return(null);
@@ -79,6 +98,23 @@ export const isInDatabase = async (
 		return userMatch.rows.length ? true : false;
 	} catch(error){
 		console.log(error.message);
+		return null;
+	}
+};
+
+export const getUserId = async (
+	email: string
+) : Promise<number | null> => {
+	try{
+		const user = await db.query(`
+			SELECT id FROM users
+			WHERE email = $1
+			`,
+		[email]
+		);
+		return user.rows[0].id;
+	} catch(error){
+		console.log(error);
 		return null;
 	}
 };

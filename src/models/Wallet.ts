@@ -1,5 +1,5 @@
 
-class User {
+class Wallet {
 	value: number;
 	description: string;
 	date: Date;
@@ -15,4 +15,4 @@ class User {
 	}
 }
 
-export default User;
+export default Wallet;

@@ -1,4 +1,4 @@
-
+import bcrypt from 'bcrypt';
 class User {
 	email: string;
 	password?: string;
@@ -12,7 +12,7 @@ class User {
 	){
 		this.email = email;
 		this.username = username;
-		this.password = password;
+		this.password = bcrypt.hashSync(password, 10);
 	}
 }
 
