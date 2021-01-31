@@ -1,1 +1,4 @@
-To run the project just enter "yarn && yarn dev"
+WORK IN PROGRESS!!
+
+to install -> yarn install
+to run -> yarn run dev
