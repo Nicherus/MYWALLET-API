@@ -1,4 +1,4 @@
-WORK IN PROGRESS!!
+WORK IN PROGRESS!! (needs refactor to implement typeORM)
 
 to install -> yarn install
 -
